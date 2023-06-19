@@ -3,9 +3,6 @@
 pipeline{
 
     agent any
-    tools{
-        maven 'Maven'
-    }
 
     parameters{
 
@@ -46,24 +43,27 @@ pipeline{
                }
             }
         }
-        stage('sonar quality check'){
+        stage('Static code analysis: Sonarqube'){
+         when { expression {  params.action == 'create' } }
             steps{
-            script{
-                withSonarQubeEnv(credentialsId: 'sonar-token') {
-                sh 'mvn clean package sonar:sonar'    
-                }
-
-            }
-          }
-        }
-        stage('sonar quality gate status'){
-            steps{
-                script{
-                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token'
-                }
+               script{
+                   
+                   def SonarQubecredentialsId = 'sonar-token'
+                   statiCodeAnalysis(SonarQubecredentialsId)
+               }
             }
         }
-        stage('Maven Build : maven'){
+        stage('Quality Gate Status Check : Sonarqube'){
+         when { expression {  params.action == 'create' } }
+            steps{
+               script{
+                   
+                   def SonarQubecredentialsId = 'sona-token'
+                   QualityGateStatus(SonarQubecredentialsId)
+               }
+            }
+        }
+        stage('Maven Build : Maven'){
          when { expression {  params.action == 'create' } }
             steps{
                script{
