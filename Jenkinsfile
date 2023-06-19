@@ -46,24 +46,21 @@ pipeline{
                }
             }
         }
-        stage('Static code analysis: Sonarqube'){
-         when { expression {  params.action == 'create' } }
+        stage('sonar quality check'){
             steps{
-               script{
-                   
-                   def SonarQubecredentialsId = 'sonar-token'
-                   statiCodeAnalysis(SonarQubecredentialsId)
-               }
+            script{
+                withSonarQubeEnv(credentialsId: 'sonar-token') {
+                sh 'mvn clean package sonar:sonar'    
+                }
+
             }
+          }
         }
-        stage('Quality Gate Status Check : Sonarqube'){
-         when { expression {  params.action == 'create' } }
+        stage('sonar quality gate status'){
             steps{
-               script{
-                   
-                   def SonarQubecredentialsId = 'sonar-token'
-                   QualityGateStatus(SonarQubecredentialsId)
-               }
+                script{
+                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token'
+                }
             }
         }
         stage('Maven Build : maven'){
